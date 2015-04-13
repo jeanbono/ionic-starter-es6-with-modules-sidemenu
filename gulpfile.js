@@ -1,17 +1,17 @@
 var gulp = require('gulp');
 var gutil = require('gulp-util');
-var babel = require('gulp-babel');
-var sourcemaps = require('gulp-sourcemaps');
 var bower = require('bower');
-var concat = require('gulp-concat');
+var browserify = require('browserify');
+var babelify = require('babelify');
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
 var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
 
 var paths = {
-  sass: ['./scss/**/*.scss'],
-  scripts: ['./jssrc/**/{!(app.js), *.js}', './jssrc/app.js']
+  sass: ['./scss/**/*.scss']
 };
 
 gulp.task('default', ['sass', 'scripts']);
@@ -29,14 +29,17 @@ gulp.task('sass', function(done) {
 });
 
 gulp.task('scripts', function (done) {
-  return gulp.src(paths.scripts)
-    .pipe(sourcemaps.init())
-    .pipe(babel({
-      modules: 'amd',
-      moduleIds: true
-    }))
-    .pipe(concat('all.js'))
-    .pipe(sourcemaps.write('.'))
+  browserify({
+    entries: './jssrc/app.js',
+    extensions: ['.js'],
+    debug: true,
+    fullPaths: true
+  })
+    .transform(babelify)
+    .bundle()
+    .pipe(source('all.js'))
+    .pipe(buffer())
+    //.pipe(uglify())
     .pipe(gulp.dest('./www/js'));
 });
 
